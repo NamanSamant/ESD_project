@@ -11,5 +11,5 @@ public interface OrganizationRepo extends JpaRepository<Organization, Long> {
     Optional<Organization> findByName(String name);
     @Query("SELECT o FROM Organization o")
     List<Organization> findAllWithHR();
-    void deleteById(Long id);
+    void deleteById(int id);
 }

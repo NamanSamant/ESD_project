@@ -11,11 +11,11 @@ import java.util.List;
 
 public interface HrRepo extends JpaRepository<HR, Long> {
     @Query("SELECT h FROM HR h WHERE h.organization.id = :organizationId")
-    List<HR> findByOrganizationId(@Param("organizationId") Long organizationId);
+    List<HR> findByOrganizationId(@Param("organizationId") int organizationId);
     @Modifying
     @Transactional
     @Query("DELETE FROM HR h WHERE h.organization.id = :organizationId")
-    void deleteByOrganizationId(@Param("organizationId") Long organizationId);
+    void deleteByOrganizationId(@Param("organizationId") int organizationId);
 
     boolean existsByOrganizationId(Long organizationId);
 }

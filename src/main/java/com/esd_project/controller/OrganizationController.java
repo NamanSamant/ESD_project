@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.esd_project.service.OrganizationService;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/organizations")
@@ -25,9 +26,14 @@ public class OrganizationController {
     public ResponseEntity<List<Organization>> getAllOrganizations() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }
+    
+    @GetMapping("/search_organization")
+    public ResponseEntity<Optional<Organization>> getOrganizationByName(@RequestParam String name) {
+        return ResponseEntity.ok(organizationService.getOrganizationsByName(name));
+    }
 
     @GetMapping("/{organizationId}/hrs")
-    public ResponseEntity<List<HrResponse>> getHRsByOrganization(@PathVariable Long organizationId) {
+    public ResponseEntity<List<HrResponse>> getHRsByOrganization(@PathVariable int organizationId) {
         List<HrResponse> hrList = organizationService.getHRsByOrganization(organizationId);
         if (hrList.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -51,7 +57,7 @@ public class OrganizationController {
     }
 
     @DeleteMapping("/{organizationId}")
-    public ResponseEntity<String> deleteByOrganizationId(@PathVariable Long organizationId) {
+    public ResponseEntity<String> deleteByOrganizationId(@PathVariable int organizationId) {
         organizationService.deleteByOrganizationId(organizationId);
         return ResponseEntity.ok("Organization and associated HRs deleted successfully");
     }

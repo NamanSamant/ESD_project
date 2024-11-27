@@ -43,7 +43,11 @@ public class OrganizationService {
         return organizationRepo.findAllWithHR();
     }
 
-    public List<HrResponse> getHRsByOrganization(Long organizationId) {
+    public Optional<Organization> getOrganizationsByName(String name) {
+        return organizationRepo.findByName(name);
+    }
+
+    public List<HrResponse> getHRsByOrganization(int organizationId) {
         return hrRepo.findByOrganizationId(organizationId)
                 .stream()
                 .map(HrResponse::fromEntity)
@@ -69,9 +73,9 @@ public class OrganizationService {
         hrRepo.delete(hr);
     }
 
-    public void deleteByOrganizationId(Long organizationId) {
+    public void deleteByOrganizationId(int organizationId) {
         // Check if organization exists
-        Organization organization = organizationRepo.findById(organizationId)
+        Organization organization = organizationRepo.findById((long) organizationId)
                 .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + organizationId));
 
         // Delete associated HRs
