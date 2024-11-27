@@ -14,10 +14,10 @@ public record UpdateOrganizationRequest(
         String address,
 
         @JsonProperty("first_name")
-        String firstName,
+        String first_name,
 
         @JsonProperty("last_name")
-        String lastName,
+        String last_name,
 
         @Pattern(
                 regexp = "^(|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})$",
@@ -27,5 +27,5 @@ public record UpdateOrganizationRequest(
         String email,
 
         @JsonProperty("contact_number")
-        String contactNumber)
+        String contact_number)
 {}

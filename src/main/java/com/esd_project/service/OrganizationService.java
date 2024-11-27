@@ -1,9 +1,6 @@
 package com.esd_project.service;
 
-import com.esd_project.dto.HrResponse;
-import com.esd_project.dto.OrganizationRequest;
-import com.esd_project.dto.SearchResponse;
-import com.esd_project.dto.UpdateOrganizationRequest;
+import com.esd_project.dto.*;
 import com.esd_project.entity.HR;
 import com.esd_project.entity.Organization;
 import com.esd_project.mapper.OrganizationMapper;
@@ -24,7 +21,7 @@ public class OrganizationService {
     private final HrRepo hrRepo;
 
     // FUNCTION FOR CREATING AN ORGANIZATION
-    public String createCustomer(OrganizationRequest request) {
+    public String createOrganization(OrganizationRequest request) {
         Optional<Organization> existingOrganizationOpt = organizationRepo.findByName(request.name());
         Organization organization;
         if (existingOrganizationOpt.isPresent()) {
@@ -69,16 +66,7 @@ public class OrganizationService {
         // Check if HR exists
         HR hr = hrRepo.findById(hrId)
                 .orElseThrow(() -> new RuntimeException("HR not found with ID: " + hrId));
-
-        // Delete HR
         hrRepo.delete(hr);
-
-        // Check if the associated organization still has HRs
-        Long organizationId = hr.getOrganization().getId();
-        if (!hrRepo.existsByOrganizationId(organizationId)) {
-            // If no HRs remain, delete the organization
-            organizationRepo.deleteById(organizationId);
-        }
     }
 
     public void deleteByOrganizationId(Long organizationId) {
@@ -114,17 +102,17 @@ public class OrganizationService {
         HR hr = hrRepo.findById(hrId)
                 .orElseThrow(() -> new RuntimeException("HR not found with ID: " + hrId));
 
-        if (request.firstName() != null) {
-            hr.setFirstName(request.firstName());
+        if (request.first_name() != null) {
+            hr.setFirst_name(request.first_name());
         }
-        if (request.lastName() != null) {
-            hr.setLastName(request.lastName());
+        if (request.last_name() != null) {
+            hr.setLast_name(request.last_name());
         }
         if (request.email() != null) {
             hr.setEmail(request.email());
         }
-        if (request.contactNumber() != null) {
-            hr.setContactNumber(request.contactNumber());
+        if (request.contact_number() != null) {
+            hr.setContact_number(request.contact_number());
         }
         hrRepo.save(hr);
 
@@ -136,4 +124,25 @@ public class OrganizationService {
 
         return "Organization and HR details updated successfully";
     }
+
+    public String addHRToOrganization(AddHrRequest request, Long organizationId) {
+        // Fetch organization by ID
+        Organization organization = organizationRepo.findById(organizationId)
+                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + organizationId));
+
+        // Create new HR entity
+        HR hr = HR.builder()
+                .first_name(request.getFirst_name())
+                .last_name(request.getLastName())
+                .email(request.getEmail())
+                .contact_number(request.getContactNumber())
+                .organization(organization)
+                .build();
+
+        // Save HR entity
+        hrRepo.save(hr);
+
+        return "HR added successfully to the organization";
+    }
+
 }

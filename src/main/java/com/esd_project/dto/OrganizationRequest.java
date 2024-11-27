@@ -16,10 +16,10 @@ public record OrganizationRequest(
 
         @NotBlank(message = "first name should be present")
         @JsonProperty("first_name")
-        String firstName,
+        String first_name,
 
         @JsonProperty("last_name")
-        String lastName,
+        String last_name,
 
         @NotNull(message="email is required")
         @Email(message = "Email must be in correct format")
@@ -28,5 +28,5 @@ public record OrganizationRequest(
 
         @NotNull(message = "Address is required")
         @JsonProperty("contact_number")
-        String contactNumber)
+        String contact_number)
 {}

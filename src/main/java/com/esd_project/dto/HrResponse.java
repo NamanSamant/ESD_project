@@ -3,16 +3,18 @@ package com.esd_project.dto;
 import com.esd_project.entity.HR;
 
 public record HrResponse(
-        String firstName,
-        String lastName,
+        long id,
+        String first_name,
+        String last_name,
         String email,
-        String contactNumber) {
+        String contact_number) {
     public static HrResponse fromEntity(HR hr) {
         return new HrResponse(
-                hr.getFirstName(),
-                hr.getLastName(),
+                hr.getId(),
+                hr.getFirst_name(),
+                hr.getLast_name(),
                 hr.getEmail(),
-                hr.getContactNumber()
+                hr.getContact_number()
         );
     }
 }

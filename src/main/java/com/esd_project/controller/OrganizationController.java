@@ -1,9 +1,6 @@
 package com.esd_project.controller;
 
-import com.esd_project.dto.HrResponse;
-import com.esd_project.dto.OrganizationRequest;
-import com.esd_project.dto.SearchResponse;
-import com.esd_project.dto.UpdateOrganizationRequest;
+import com.esd_project.dto.*;
 import com.esd_project.entity.Organization;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +18,7 @@ public class OrganizationController {
 
     @PostMapping
     public ResponseEntity<String> createOrganization(@RequestBody @Valid OrganizationRequest request) {
-        return ResponseEntity.ok(organizationService.createCustomer(request));
+        return ResponseEntity.ok(organizationService.createOrganization(request));
     }
 
     @GetMapping
@@ -79,5 +76,11 @@ public class OrganizationController {
             @PathVariable Long hrId,
             @RequestBody @Valid UpdateOrganizationRequest request) {
         return ResponseEntity.ok(organizationService.updateOrganizationAndHR(organizationId, hrId, request));
+    }
+
+    @PostMapping("/hr/{organizationId}")
+    public ResponseEntity<String> addHRToOrganization(@RequestBody @Valid AddHrRequest request, @PathVariable Long organizationId) {
+        String response = organizationService.addHRToOrganization(request, organizationId);
+        return ResponseEntity.ok(response);
     }
 }

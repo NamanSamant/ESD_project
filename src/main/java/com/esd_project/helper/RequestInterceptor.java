@@ -13,6 +13,10 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         String authorizationHeader = request.getHeader("Authorization"); // the interceptor extracts authorization header from the request
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {

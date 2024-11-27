@@ -15,10 +15,10 @@ public class OrganizationMapper {
         }
         public HR toHR(Organization organization, OrganizationRequest request){
             return HR.builder()
-                    .firstName(request.firstName())
-                    .lastName(request.lastName())
+                    .first_name(request.first_name())
+                    .last_name(request.last_name())
                     .email(request.email())
-                    .contactNumber(request.contactNumber())
+                    .contact_number(request.contact_number())
                     .organization(organization)
                     .build();
         }
