@@ -3,6 +3,8 @@ package com.esd_project.service;
 import com.esd_project.dto.*;
 import com.esd_project.entity.HR;
 import com.esd_project.entity.Organization;
+import com.esd_project.exceptions.EntityNotFoundException;
+import com.esd_project.exceptions.InvalidRequestException;
 import com.esd_project.mapper.OrganizationMapper;
 import com.esd_project.repo.HrRepo;
 import lombok.RequiredArgsConstructor;
@@ -30,24 +32,29 @@ public class OrganizationService {
             hr.setOrganization(organization);
             hrRepo.save(hr);
             return "Organization already exists. HR entry created.";
+        } else {
+            organization = organizationMapper.toOrganization(request);
+            Organization savedOrganization = organizationRepo.save(organization);
+            HR hr = organizationMapper.toHR(savedOrganization, request);
+            hrRepo.save(hr);
+            return "Organization Created Successfully";
         }
-        else {
-        organization = organizationMapper.toOrganization(request);
-        Organization savedOrganization = organizationRepo.save(organization);
-        HR hr = organizationMapper.toHR(savedOrganization, request);
-        hrRepo.save(hr);
-        return "Organization Created Successfully";
-    }}
+    }
 
     public List<Organization> getAllOrganizations() {
         return organizationRepo.findAllWithHR();
     }
 
     public Optional<Organization> getOrganizationsByName(String name) {
-        return organizationRepo.findByName(name);
+        return Optional.ofNullable(organizationRepo.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with name: " + name)));
     }
 
     public List<HrResponse> getHRsByOrganization(int organizationId) {
+        if (!organizationRepo.existsById((long) organizationId)) {
+            throw new EntityNotFoundException("Organization not found with ID: " + organizationId);
+        }
+
         return hrRepo.findByOrganizationId(organizationId)
                 .stream()
                 .map(HrResponse::fromEntity)
@@ -57,7 +64,7 @@ public class OrganizationService {
     public SearchResponse getHRsByOrganizationName(String organizationName) {
         // Fetch organization by name
         Organization organization = organizationRepo.findByName(organizationName)
-                .orElseThrow(() -> new RuntimeException("Organization not found with name: " + organizationName));
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with name: " + organizationName));
 
         // Fetch HRs by organization ID
         List<HR> hrList = hrRepo.findByOrganizationId(organization.getId());
@@ -69,14 +76,14 @@ public class OrganizationService {
     public void deleteHRById(Long hrId) {
         // Check if HR exists
         HR hr = hrRepo.findById(hrId)
-                .orElseThrow(() -> new RuntimeException("HR not found with ID: " + hrId));
+                .orElseThrow(() -> new EntityNotFoundException("HR not found with ID: " + hrId));
         hrRepo.delete(hr);
     }
 
     public void deleteByOrganizationId(int organizationId) {
         // Check if organization exists
         Organization organization = organizationRepo.findById((long) organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + organizationId));
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with ID: " + organizationId));
 
         // Delete associated HRs
         hrRepo.deleteByOrganizationId(organizationId);
@@ -88,12 +95,12 @@ public class OrganizationService {
     // Function to update organization details
     public String updateOrganization(Long organizationId, UpdateOrganizationRequest request) {
         Organization organization = organizationRepo.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + organizationId));
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with ID: " + organizationId));
 
-        if(request.name()!=null) {
+        if (request.name() != null) {
             organization.setName(request.name());
         }
-        if(request.address()!=null) {
+        if (request.address() != null) {
             organization.setAddress(request.address());
         }
 
@@ -104,24 +111,27 @@ public class OrganizationService {
 
     public String updateHR(Long hrId, UpdateOrganizationRequest request) {
         HR hr = hrRepo.findById(hrId)
-                .orElseThrow(() -> new RuntimeException("HR not found with ID: " + hrId));
-
+                .orElseThrow(() -> new EntityNotFoundException("HR not found with ID: " + hrId));
         if (request.first_name() != null) {
+            validateField(request.first_name(), "^[A-Za-z ]+$", "Invalid first name format.");
             hr.setFirst_name(request.first_name());
         }
         if (request.last_name() != null) {
+            validateField(request.last_name(), "^[A-Za-z ]+$", "Invalid last name format.");
             hr.setLast_name(request.last_name());
         }
         if (request.email() != null) {
+            validateField(request.email(), "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", "Invalid email format.");
             hr.setEmail(request.email());
         }
         if (request.contact_number() != null) {
+            validateField(request.contact_number(), "^\\d{10}$", "Invalid contact number format.");
             hr.setContact_number(request.contact_number());
         }
         hrRepo.save(hr);
-
         return "HR details updated successfully";
     }
+
     public String updateOrganizationAndHR(Long organizationId, Long hrId, UpdateOrganizationRequest request) {
         updateOrganization(organizationId, request);
         updateHR(hrId, request);
@@ -132,11 +142,23 @@ public class OrganizationService {
     public String addHRToOrganization(AddHrRequest request, Long organizationId) {
         // Fetch organization by ID
         Organization organization = organizationRepo.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with ID: " + organizationId));
+                .orElseThrow(() -> new EntityNotFoundException("Organization not found with ID: " + organizationId));
 
+        if (request.getEmail() != null) {
+            validateField(request.getEmail(), "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", "Invalid email format.");
+        }
+        if (request.getFirstName() != null) {
+            validateField(request.getFirstName(), "^[A-Za-z ]+$", "Invalid first name format.");
+        }
+        if (request.getLastName() != null) {
+            validateField(request.getLastName(), "^[A-Za-z ]+$", "Invalid last name format.");
+        }
+        if (request.contact_number() != null) {
+            validateField(request.contact_number(), "^\\d{10}$", "Invalid contact number format.");
+        }
         // Create new HR entity
         HR hr = HR.builder()
-                .first_name(request.getFirst_name())
+                .first_name(request.getFirstName())
                 .last_name(request.getLastName())
                 .email(request.getEmail())
                 .contact_number(request.getContactNumber())
@@ -145,8 +167,13 @@ public class OrganizationService {
 
         // Save HR entity
         hrRepo.save(hr);
-
         return "HR added successfully to the organization";
+    }
+
+    private void validateField(String fieldValue, String regex, String errorMessage) {
+        if (fieldValue != null && !fieldValue.matches(regex)) {
+            throw new InvalidRequestException(errorMessage);
+        }
     }
 
 }
